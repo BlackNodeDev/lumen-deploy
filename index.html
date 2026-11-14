@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#07070b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lumen Deploy">
+<meta name="application-name" content="Lumen Deploy">
+<meta name="description" content="Mobile-first GitHub Pages deploy dashboard.">
+<title>Lumen Deploy</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070b;--elev:#0e0e14;--card:#13131b;--card2:#191922;
+  --fg:#f3f3f7;--dim:#9a9aaa;--mute:#6e6e7c;
+  --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+  --acc:#8b7bff;--acc2:#a78bfa;--acc3:#6ea8ff;
+  --acc-soft:rgba(139,123,255,.16);--acc-glow:rgba(139,123,255,.4);
+  --ready:#3ddc97;--ready-soft:rgba(61,220,151,.14);
+  --build:#f5c16c;--build-soft:rgba(245,193,108,.16);
+  --fail:#ff6b7a;--fail-soft:rgba(255,107,122,.14);
+  --queued:#8e8e9c;--queued-soft:rgba(142,142,156,.14);
+  --priv:#f0a36b;--priv-soft:rgba(240,163,107,.14);
+  --tab-h:58px;--radius:14px;
+  --font:Inter,Roboto,"Segoe UI","Helvetica Neue",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:var(--fg);font-family:var(--font);
+  overflow:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+a{color:var(--acc3);text-decoration:none;overflow-wrap:anywhere}
+#app{position:relative;height:100%;max-width:520px;margin:0 auto;background:
+  radial-gradient(1200px 420px at 50% -80px,rgba(139,123,255,.16),transparent 60%),var(--bg);
+  display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:600px) and (min-height:600px){
+  body{display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 30%,#141422,#000)}
+  #app{width:412px;height:min(915px,96vh);border-radius:28px;border:1px solid #232334;
+    box-shadow:0 0 0 8px #0b0b12,0 30px 90px rgba(0,0,0,.75)}
+}
+#top{flex:none;padding:calc(var(--sat) + 10px) max(16px,var(--sar)) 10px max(16px,var(--sal));
+  display:flex;align-items:center;gap:10px;min-height:calc(var(--sat) + 52px);z-index:5}
+#top .back{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--fg);
+  border:1px solid var(--line);background:rgba(255,255,255,.03);flex:none}
+#top .back:active{background:rgba(255,255,255,.08)}
+#top .titles{flex:1;min-width:0}
+#top h1{margin:0;font-size:18px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top .sub{margin:2px 0 0;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#live{display:none;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--build);
+  padding:5px 8px;border-radius:999px;background:var(--build-soft);flex:none}
+#live.on{display:flex}
+#live i{width:7px;height:7px;border-radius:50%;background:var(--build);box-shadow:0 0 8px var(--build);animation:pulse 1.2s ease-in-out infinite}
+#who{width:32px;height:32px;border-radius:50%;background:var(--card2);border:1px solid var(--line);overflow:hidden;flex:none}
+#who img{width:100%;height:100%;object-fit:cover;display:block}
+#main{flex:1;min-height:0;overflow:auto;padding:0 max(16px,var(--sar)) calc(var(--tab-h) + var(--sab) + 20px) max(16px,var(--sal));
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+#tabs{position:absolute;left:0;right:0;bottom:0;z-index:6;display:flex;gap:4px;
+  padding:6px max(10px,var(--sar)) calc(var(--sab) + 8px) max(10px,var(--sal));
+  background:linear-gradient(180deg,rgba(7,7,11,.72),#07070b 40%);
+  border-top:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+#tabs button{flex:1;min-height:48px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--mute);font-size:11px;font-weight:500;letter-spacing:.01em}
+#tabs button svg{width:22px;height:22px}
+#tabs button.on{color:var(--fg);background:var(--acc-soft)}
+#tabs button.on svg{color:var(--acc);filter:drop-shadow(0 0 6px var(--acc-glow))}
+#tabs button:active{background:rgba(255,255,255,.05)}
+
+.logo-row{display:flex;align-items:center;gap:12px;margin:8px 0 18px}
+.mark{width:44px;height:44px;border-radius:13px;background:#0b0b12;border:1px solid rgba(139,123,255,.35);
+  box-shadow:0 0 0 1px #07070b,0 0 24px rgba(139,123,255,.2);display:grid;place-items:center;flex:none}
+.mark svg{width:22px;height:22px;color:var(--acc)}
+.kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);font-weight:600}
+.lead{margin:0 0 18px;color:var(--dim);font-size:14px;line-height:1.55}
+
+label.lbl{display:block;font-size:12px;font-weight:500;color:var(--dim);margin:0 0 8px}
+.field{position:relative}
+input[type=text],input[type=password],input[type=search],select,textarea{
+  width:100%;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+  padding:0 14px;font-size:16px;outline:none;color:var(--fg)}
+textarea{height:auto;min-height:88px;padding:12px 14px;resize:vertical;line-height:1.45}
+input:focus,select:focus,textarea:focus{border-color:rgba(139,123,255,.55);box-shadow:0 0 0 3px var(--acc-soft)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 22px,calc(100% - 13px) 22px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.eye{position:absolute;right:4px;top:4px;width:40px;height:40px;border-radius:10px;color:var(--dim);display:grid;place-items:center}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;
+  border-radius:12px;font-size:15px;font-weight:600;letter-spacing:-.01em;width:100%}
+.btn:active{transform:scale(.985)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn-acc{background:linear-gradient(180deg,#9b8cff,#7a68f5);color:#fff;box-shadow:0 8px 24px rgba(122,104,245,.28)}
+.btn-ghost{background:var(--card2);border:1px solid var(--line);color:var(--fg)}
+.btn-danger{background:var(--fail-soft);color:#ff8a96;border:1px solid rgba(255,107,122,.25)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.btn-row .btn{flex:1}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.card + .card{margin-top:10px}
+.note{font-size:13px;line-height:1.55;color:var(--dim)}
+.note strong{color:var(--fg);font-weight:600}
+.note a{color:var(--acc)}
+.scopes{margin:10px 0 0;padding:0;list-style:none}
+.scopes li{position:relative;padding:7px 0 7px 16px;font-size:13px;color:var(--dim);line-height:1.4;border-top:1px solid var(--line)}
+.scopes li:first-child{border-top:0}
+.scopes li::before{content:"";position:absolute;left:0;top:15px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
+.scopes code,.mono,pre,.sha{font-family:var(--mono)}
+code{font-size:12px;color:var(--acc2)}
+
+.search{position:sticky;top:0;z-index:3;background:linear-gradient(180deg,var(--bg) 70%,transparent);
+  padding:0 0 12px;margin:0 -2px;padding-left:2px;padding-right:2px}
+.search input{padding-left:42px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--mute);pointer-events:none}
+.filters{display:flex;gap:6px;margin:8px 0 4px;overflow:hidden}
+.chip{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:transparent;
+  color:var(--dim);font-size:12px;font-weight:500;white-space:nowrap}
+.chip.on{background:var(--acc-soft);border-color:rgba(139,123,255,.4);color:var(--fg)}
+
+button.repo,button.run,div.job{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;color:inherit}
+button.repo:active,button.run:active{background:var(--card2)}
+.repo .name,.run .msg{font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:8px;font-size:12px;color:var(--dim)}
+.pill{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.01em}
+.pill-pub{background:rgba(255,255,255,.06);color:var(--dim)}
+.pill-priv{background:var(--priv-soft);color:var(--priv)}
+.pill-pages{background:var(--acc-soft);color:#c5bfff}
+.pill-off{background:rgba(255,255,255,.04);color:var(--mute)}
+.pill-ready{background:var(--ready-soft);color:var(--ready)}
+.pill-building{background:var(--build-soft);color:var(--build)}
+.pill-failed{background:var(--fail-soft);color:var(--fail)}
+.pill-queued{background:var(--queued-soft);color:var(--queued)}
+.pill-building .dot,.pill-queued .dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.2s ease-in-out infinite}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+@keyframes pulse{50%{opacity:.35}}
+.sha{font-size:11px;color:var(--mute)}
+.url-line{margin-top:8px;font-size:12px;color:var(--acc3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.section{margin:18px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.section h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+.section .link{font-size:12px;color:var(--acc);font-weight:500}
+
+.stat{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:14px}
+.live-box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.live-box .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.live-box .v{margin-top:6px;font-size:14px;overflow-wrap:anywhere}
+.live-box a{color:var(--acc3)}
+
+.radio{display:flex;flex-direction:column;gap:8px}
+.radio label{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card)}
+.radio label.on{border-color:rgba(139,123,255,.45);background:var(--acc-soft)}
+.radio input{margin-top:3px;accent-color:var(--acc);width:16px;height:16px;flex:none}
+.radio .t,.radio .d{display:block}
+.radio .t{font-size:14px;font-weight:600}
+.radio .d{font-size:12px;color:var(--dim);margin-top:3px;line-height:1.4}
+
+.warn{background:rgba(245,193,108,.08);border:1px solid rgba(245,193,108,.22);border-radius:12px;padding:12px 14px;
+  font-size:13px;color:#f3d7a1;line-height:1.5;margin:12px 0}
+.err{background:var(--fail-soft);border:1px solid rgba(255,107,122,.28);border-radius:12px;padding:12px 14px;
+  font-size:13px;color:#ffb3ba;line-height:1.5;margin:0 0 12px}
+.banner-ok{background:var(--ready-soft);border:1px solid rgba(61,220,151,.28);border-radius:12px;padding:12px 14px;
+  font-size:13px;color:#9aecc8;line-height:1.5;margin:0 0 12px}
+
+.empty{text-align:center;padding:48px 16px;color:var(--dim)}
+.empty h3{margin:12px 0 6px;color:var(--fg);font-size:16px;font-weight:600}
+.empty p{margin:0;font-size:13px;line-height:1.5}
+.skel{height:76px;border-radius:var(--radius);background:linear-gradient(90deg,var(--card),var(--card2),var(--card));
+  background-size:200% 100%;animation:shimmer 1.2s ease-in-out infinite;margin-bottom:8px;border:1px solid var(--line)}
+@keyframes shimmer{0%{background-position:0 0}100%{background-position:-200% 0}}
+
+.job{cursor:default;margin-bottom:8px}
+.job .head{display:flex;align-items:center;gap:8px}
+.job .name{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.steps{margin:10px 0 0;padding:0;list-style:none}
+.steps li{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:13px;color:var(--dim);border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.steps .st{width:16px;flex:none;margin-top:2px;text-align:center}
+.steps .ok{color:var(--ready)}
+.steps .fail{color:var(--fail)}
+.steps .run{color:var(--build)}
+pre.logs{margin:10px 0 0;padding:12px;border-radius:12px;background:#08080c;border:1px solid var(--line);
+  font-size:11px;line-height:1.5;color:#d5d5e0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto}
+
+#sheet{position:absolute;inset:0;z-index:20;display:none;align-items:flex-end;background:rgba(0,0,0,.55)}
+#sheet.on{display:flex}
+#sheet .panel{width:100%;max-height:86%;overflow:auto;background:var(--elev);border-top-left-radius:18px;border-top-right-radius:18px;
+  border:1px solid var(--line);padding:10px 16px calc(var(--sab) + 18px);box-shadow:var(--shadow)}
+#sheet .grab{width:36px;height:4px;border-radius:2px;background:var(--line2);margin:4px auto 12px}
+#sheet h3{margin:0 0 8px;font-size:17px;letter-spacing:-.02em}
+#sheet .body{font-size:14px;color:var(--dim);line-height:1.55}
+#sheet pre{margin:12px 0;padding:10px 12px;border-radius:10px;background:#08080c;border:1px solid var(--line);
+  font-size:11px;line-height:1.45;color:#c8c8d6;white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow:auto}
+#toast{position:absolute;left:50%;bottom:calc(var(--tab-h) + var(--sab) + 14px);transform:translateX(-50%) translateY(12px);
+  background:var(--card2);border:1px solid var(--line2);color:var(--fg);padding:10px 14px;border-radius:12px;font-size:13px;
+  z-index:30;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:min(92%,360px);text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.count{font-size:12px;color:var(--mute);font-weight:500}
+.hidden{display:none!important}
+hr.sep{border:0;border-top:1px solid var(--line);margin:16px 0}
+.tiny{font-size:12px;color:var(--mute);line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top"></header>
+  <main id="main"></main>
+  <nav id="tabs" aria-label="Primary">
+    <button type="button" id="tab-projects" data-tab="projects">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H9l2 2h6.5A2.5 2.5 0 0 1 20 8.5V17a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17Z"/></svg>
+      Projects
+    </button>
+    <button type="button" id="tab-deployments" data-tab="deployments">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M5 16.5v1A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-1"/></svg>
+      Deployments
+    </button>
+    <button type="button" id="tab-settings" data-tab="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.7.9 1.2 1.6 1.3H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.1Z"/></svg>
+      Settings
+    </button>
+  </nav>
+  <div id="sheet" hidden></div>
+  <div id="toast" role="status"></div>
+</div>
+<script>
+(() => {
+  const GH = "https://api.github.com";
+  const TOKEN_KEY = "lumen-deploy-token";
+  const LAST_REPO_KEY = "lumen-deploy-last-repo";
+  const API_VER = "2022-11-28";
+  const WORKFLOW_PATH = ".github/workflows/lumen-pages.yml";
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+
+  const state = {
+    view: "settings",
+    owner: "",
+    repo: "",
+    runId: "",
+    user: null,
+    tokenOk: false,
+    repos: [],
+    pages: {},
+    filter: "",
+    vis: "all",
+    pubBranch: "",
+    pubFolder: "/",
+    pubMode: "workflow",
+    runs: [],
+    deployments: [],
+    pagesBuilds: [],
+    jobs: [],
+    logs: {},
+    logError: {},
+    currentRun: null,
+    loading: {},
+    error: "",
+    banner: "",
+    busy: "",
+    polling: false,
+    pollTimer: 0,
+  };
+
+  window.__LUMEN = state;
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+  function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
+  function setToken(t) {
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else localStorage.removeItem(TOKEN_KEY);
+  }
+  function lastRepo(v) {
+    if (v === undefined) return localStorage.getItem(LAST_REPO_KEY) || "";
+    if (v) localStorage.setItem(LAST_REPO_KEY, v);
+    else localStorage.removeItem(LAST_REPO_KEY);
+  }
+  function fullName() { return state.owner && state.repo ? state.owner + "/" + state.repo : ""; }
+  function repoObj(name) { return state.repos.find((r) => r.full_name === name) || null; }
+
+  function safeHttp(u) {
+    try {
+      const x = new URL(u);
+      if (x.protocol === "https:" || x.protocol === "http:") return x.href;
+    } catch (_) {}
+    return "";
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return "";
+    const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (s < 45) return "just now";
+    if (s < 3600) return Math.round(s / 60) + "m ago";
+    if (s < 86400) return Math.round(s / 3600) + "h ago";
+    if (s < 86400 * 14) return Math.round(s / 86400) + "d ago";
+    return new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function shortSha(s) { return (s || "").slice(0, 7); }
+
+  function firstLine(msg) {
+    return String(msg || "(no message)").split("\n")[0].trim() || "(no message)";
+  }
+
+  function statusKind(status, conclusion) {
+    const st = (status || "").toLowerCase();
+    const c = (conclusion || "").toLowerCase();
+    if (st === "queued" || st === "pending" || st === "requested" || st === "waiting" || st === "waiting_for_review") return "queued";
+    if (st === "in_progress" || st === "building") return "building";
+    if (st === "completed" || st === "built" || st === "success" || st === "ready") {
+      if (c === "failure" || c === "cancelled" || c === "canceled" || c === "timed_out" || c === "startup_failure" || c === "errored" || c === "error") return "failed";
+      if (c === "skipped") return "queued";
+      return "ready";
+    }
+    if (st === "failed" || st === "errored" || st === "error" || st === "failure") return "failed";
+    if (c === "failure" || c === "cancelled" || c === "canceled" || c === "timed_out") return "failed";
+    return st || "queued";
+  }
+
+  function statusLabel(kind) {
+    return { queued: "Queued", building: "Building", ready: "Ready", failed: "Failed" }[kind] || kind;
+  }
+
+  function pagesOn(info) {
+    if (!info || info.enabled === false || info.error) return false;
+    return !!(info.html_url || info.build_type || info.source);
+  }
+
+  function markSvg() {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"/><path d="m7.5 9 4.5-5 4.5 5"/><path d="M6 18h12"/></svg>`;
+  }
+  function backSvg() {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>`;
+  }
+  function searchSvg() {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>`;
+  }
+
+  function toast(msg) {
+    const el = $("#toast");
+    el.textContent = msg;
+    el.classList.add("on");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove("on"), 2600);
+  }
+
+  async function gh(path, opts = {}) {
+    const token = getToken();
+    const headers = Object.assign({
+      Accept: opts.accept || "application/vnd.github+json",
+      "X-GitHub-Api-Version": API_VER,
+    }, opts.headers || {});
+    if (token) headers.Authorization = "Bearer " + token;
+    if (opts.body && !headers["Content-Type"] && !(opts.body instanceof FormData)) {
+      headers["Content-Type"] = "application/json";
+    }
+    const res = await fetch(GH + path, {
+      method: opts.method || "GET",
+      headers,
+      body: opts.body == null ? undefined : (typeof opts.body === "string" ? opts.body : JSON.stringify(opts.body)),
+      redirect: opts.redirect || "follow",
+    });
+    if (opts.raw) return res;
+    if (res.status === 204) return { data: null, headers: res.headers, status: 204 };
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+    if (!res.ok) {
+      const err = new Error((data && (data.message || data.error)) || (res.status + " " + res.statusText));
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    return { data, headers: res.headers, status: res.status };
+  }
+
+  async function ghList(path) {
+    const out = [];
+    let url = path;
+    let guard = 0;
+    while (url && guard++ < 6) {
+      const sep = url.includes("?") ? "&" : "?";
+      const p = url.startsWith("http") ? url.replace(GH, "") : url;
+      const qualified = p.includes("per_page=") ? p : p + sep + "per_page=100";
+      const { data, headers } = await gh(qualified);
+      if (Array.isArray(data)) out.push(...data);
+      else if (data && Array.isArray(data.workflow_runs)) out.push(...data.workflow_runs);
+      else if (data && Array.isArray(data.jobs)) out.push(...data.jobs);
+      else if (data && Array.isArray(data.workflows)) out.push(...data.workflows);
+      else break;
+      const link = (headers && headers.get && headers.get("Link")) || "";
+      const next = /<([^>]+)>;\s*rel="next"/.exec(link);
+      url = next ? next[1] : "";
+    }
+    return out;
+  }
+
+  async function getPages(owner, repo) {
+    try {
+      const { data } = await gh("/repos/" + encodeURIComponent(owner) + "/" + encodeURIComponent(repo) + "/pages");
+      return data;
+    } catch (e) {
+      if (e.status === 404) return { enabled: false };
+      return { error: e.message, status: e.status };
+    }
+  }
+
+  function pagesWorkflowYaml(branch, folder) {
+    const path = folder === "/docs" ? "docs" : ".";
+    const lines = [
+      "# Published by Lumen Deploy — static GitHub Pages",
+      "name: Lumen Deploy · Pages",
+      "",
+      "on:",
+      "  push:",
+      "    branches: [" + branch + "]",
+      "  workflow_dispatch:",
+      "",
+      "permissions:",
+      "  contents: read",
+      "  pages: write",
+      "  id-token: write",
+      "",
+      "concurrency:",
+      "  group: pages-production",
+      "  cancel-in-progress: false",
+      "",
+      "jobs:",
+      "  deploy:",
+      "    name: Deploy",
+      "    environment:",
+      "      name: github-pages",
+      "      url: ${{ steps.deployment.outputs.page_url }}",
+      "    runs-on: ubuntu-latest",
+      "    steps:",
+      "      - name: Checkout",
+      "        uses: actions/checkout@v4",
+      "      - name: Configure Pages",
+      "        uses: actions/configure-pages@v5",
+      "      - name: Upload artifact",
+      "        uses: actions/upload-pages-artifact@v3",
+      "        with:",
+      "          path: '" + path + "'",
+      "      - name: Deploy",
+      "        id: deployment",
+      "        uses: actions/deploy-pages@v4",
+      "",
+    ];
+    return lines.join("\n");
+  }
+
+  function utf8B64(str) {
+    const bytes = new TextEncoder().encode(str);
+    let bin = "";
+    bytes.forEach((b) => { bin += String.fromCharCode(b); });
+    return btoa(bin);
+  }
+
+  /* ---------- routing ---------- */
+  function parseHash() {
+    const raw = (location.hash || "").replace(/^#/, "") || "";
+    const parts = raw.split("/").filter(Boolean);
+    if (parts[0] === "settings") return { view: "settings" };
+    if (parts[0] === "projects") return { view: "projects" };
+    if (parts[0] === "project" && parts[1] && parts[2]) return { view: "project", owner: decodeURIComponent(parts[1]), repo: decodeURIComponent(parts[2]) };
+    if (parts[0] === "deployments" && parts[1] && parts[2]) return { view: "deployments", owner: decodeURIComponent(parts[1]), repo: decodeURIComponent(parts[2]) };
+    if (parts[0] === "deployments") return { view: "deployments" };
+    if (parts[0] === "logs" && parts[1] && parts[2] && parts[3]) {
+      return { view: "logs", owner: decodeURIComponent(parts[1]), repo: decodeURIComponent(parts[2]), runId: decodeURIComponent(parts[3]) };
+    }
+    return { view: getToken() ? "projects" : "settings" };
+  }
+
+  function go(view, owner, repo, runId, replace) {
+    let hash = "#/" + view;
+    if (owner && repo) hash += "/" + encodeURIComponent(owner) + "/" + encodeURIComponent(repo);
+    if (runId) hash += "/" + encodeURIComponent(runId);
+    if (replace) location.replace(hash);
+    else location.hash = hash;
+  }
+
+  /* ---------- data loads ---------- */
+  async function verifyToken() {
+    const t = getToken();
+    if (!t) {
+      state.user = null;
+      state.tokenOk = false;
+      return false;
+    }
+    try {
+      const { data } = await gh("/user");
+      state.user = data;
+      state.tokenOk = true;
+      state.error = "";
+      return true;
+    } catch (e) {
+      state.user = null;
+      state.tokenOk = false;
+      state.error = e.status === 401 ? "That token was rejected. Check it and try again." : (e.message || "Could not reach GitHub.");
+      return false;
+    }
+  }
+
+  async function loadRepos(force) {
+    if (!state.tokenOk) return;
+    if (state.repos.length && !force) return;
+    state.loading.repos = true;
+    state.error = "";
+    render();
+    try {
+      state.repos = await ghList("/user/repos?sort=updated&affiliation=owner,collaborator,organization_member");
+    } catch (e) {
+      state.error = e.message || "Couldn't load repositories.";
+    }
+    state.loading.repos = false;
+    render();
+    hydratePages();
+  }
+
+  async function hydratePages() {
+    const pending = state.repos.filter((r) => state.pages[r.full_name] === undefined);
+    let i = 0;
+    const workers = Array.from({ length: Math.min(5, pending.length) }, async () => {
+      while (i < pending.length) {
+        const r = pending[i++];
+        const [owner, name] = r.full_name.split("/");
+        state.pages[r.full_name] = await getPages(owner, name);
+        const slot = document.querySelector('[data-pages="' + CSS.escape(r.full_name) + '"]');
+        if (slot) slot.outerHTML = pagesPill(r.full_name);
+      }
+    });
+    await Promise.all(workers);
+  }
+
+  function pagesPill(full) {
+    const info = state.pages[full];
+    if (info === undefined) return `<span class="pill pill-off" data-pages="${esc(full)}">Pages…</span>`;
+    if (info && info.enabled === false) return `<span class="pill pill-off" data-pages="${esc(full)}">Pages off</span>`;
+    if (info && info.error) return `<span class="pill pill-off" data-pages="${esc(full)}">Pages ?</span>`;
+    const kind = info.build_type === "workflow" ? "Actions" : (info.source && info.source.path ? "Legacy" : "On");
+    return `<span class="pill pill-pages" data-pages="${esc(full)}">Pages · ${esc(kind)}</span>`;
+  }
+
+  function mapRun(run, urlBySha) {
+    const kind = statusKind(run.status, run.conclusion);
+    const sha = run.head_sha || "";
+    return {
+      id: String(run.id),
+      kind,
+      message: firstLine(run.display_title || (run.head_commit && run.head_commit.message) || run.name),
+      sha,
+      branch: run.head_branch || "",
+      time: run.updated_at || run.created_at,
+      html: run.html_url || "",
+      live: (urlBySha && urlBySha[sha]) || "",
+      event: run.event || "",
+      name: run.name || "",
+      source: "actions",
+    };
+  }
+
+  async function loadDeployData() {
+    if (!state.owner || !state.repo) return;
+    const key = fullName();
+    state.loading.deploys = true;
+    state.error = "";
+    try {
+      const base = "/repos/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo);
+      const [runsWrap, deps, builds] = await Promise.all([
+        gh(base + "/actions/runs?per_page=30").catch((e) => ({ data: { workflow_runs: [] }, _err: e })),
+        ghList(base + "/deployments?per_page=20").catch(() => []),
+        ghList(base + "/pages/builds").catch(() => []),
+      ]);
+      const runs = (runsWrap.data && runsWrap.data.workflow_runs) || [];
+      state.deployments = deps;
+      state.pagesBuilds = builds;
+
+      const urlBySha = {};
+      const top = deps.slice(0, 12);
+      await Promise.all(top.map(async (d) => {
+        try {
+          const { data } = await gh(base + "/deployments/" + d.id + "/statuses");
+          const list = Array.isArray(data) ? data : [];
+          const withUrl = list.find((s) => s.environment_url) || list[0];
+          const envUrl = withUrl && safeHttp(withUrl.environment_url);
+          if (envUrl) urlBySha[d.sha] = envUrl;
+        } catch (_) {}
+      }));
+      const pages = state.pages[key];
+      if (pages && pages.html_url) {
+        const live = safeHttp(pages.html_url);
+        runs.forEach((r) => {
+          if (r.head_sha && r.conclusion === "success" && r.head_branch === (repoObj(key) || {}).default_branch && !urlBySha[r.head_sha]) {
+            urlBySha[r.head_sha] = live;
+          }
+        });
+      }
+      state.runs = runs.map((r) => mapRun(r, urlBySha));
+    } catch (e) {
+      state.error = e.message || "Couldn't load deployments.";
+    }
+    state.loading.deploys = false;
+    const active = state.runs.some((r) => r.kind === "building" || r.kind === "queued");
+    setPolling(active);
+    if (state.view === "project" || state.view === "deployments" || state.view === "logs") render();
+  }
+
+  async function loadLogs() {
+    if (!state.owner || !state.repo || !state.runId) return;
+    state.loading.logs = true;
+    try {
+      const base = "/repos/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo);
+      const { data } = await gh(base + "/actions/runs/" + encodeURIComponent(state.runId));
+      state.currentRun = data;
+      const jobsRes = await gh(base + "/actions/runs/" + encodeURIComponent(state.runId) + "/jobs");
+      state.jobs = (jobsRes.data && jobsRes.data.jobs) || [];
+      render();
+      for (const job of state.jobs) {
+        await loadJobLog(job.id);
+      }
+    } catch (e) {
+      state.error = e.message || "Couldn't load this run.";
+    }
+    state.loading.logs = false;
+    const runKind = state.currentRun ? statusKind(state.currentRun.status, state.currentRun.conclusion) : "";
+    setPolling(runKind === "building" || runKind === "queued");
+    render();
+  }
+
+  async function loadJobLog(jobId) {
+    const path = "/repos/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo) + "/actions/jobs/" + jobId + "/logs";
+    const githubUrl = "https://github.com/" + state.owner + "/" + state.repo + "/actions/runs/" + state.runId + "/job/" + jobId;
+    try {
+      const res = await gh(path, { raw: true, accept: "application/vnd.github+json" });
+      if (!res.ok) {
+        state.logError[jobId] = { status: res.status, githubUrl };
+        state.logs[jobId] = "";
+        render();
+        return;
+      }
+      const text = await res.text();
+      state.logs[jobId] = text;
+      delete state.logError[jobId];
+    } catch (e) {
+      state.logError[jobId] = { cors: true, message: e.message, githubUrl };
+      state.logs[jobId] = "";
+    }
+    if (state.view === "logs") {
+      const block = document.querySelector('[data-log="' + jobId + '"]');
+      if (block) block.innerHTML = logBlock(jobId);
+    }
+  }
+
+  function anyActive() {
+    return state.runs.some((r) => r.kind === "building" || r.kind === "queued") ||
+      (state.currentRun && ["building", "queued"].includes(statusKind(state.currentRun.status, state.currentRun.conclusion)));
+  }
+
+  function setPolling(on) {
+    state.polling = !!on;
+    const el = $("#live");
+    if (el) el.classList.toggle("on", state.polling);
+    if (!on) {
+      clearInterval(state.pollTimer);
+      state.pollTimer = 0;
+      return;
+    }
+    if (state.pollTimer) return;
+    state.pollTimer = setInterval(() => {
+      if (document.hidden) return;
+      if (state.view === "project" || state.view === "deployments") loadDeployData();
+      else if (state.view === "logs") loadLogs();
+      else setPolling(false);
+    }, 6000);
+  }
+
+  /* ---------- actions ---------- */
+  function confirmSheet({ title, body, yaml, confirmLabel, onConfirm }) {
+    const sheet = $("#sheet");
+    sheet.hidden = false;
+    sheet.classList.add("on");
+    sheet.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="grab"></div>
+      <h3 id="sheet-title">${esc(title)}</h3>
+      <div class="body">${body}</div>
+      ${yaml ? `<pre>${esc(yaml)}</pre>` : ""}
+      <div class="btn-row">
+        <button class="btn btn-ghost" type="button" id="sheet-cancel">Cancel</button>
+        <button class="btn btn-acc" type="button" id="sheet-ok">${esc(confirmLabel || "Confirm")}</button>
+      </div>
+    </div>`;
+    const close = () => { sheet.classList.remove("on"); sheet.hidden = true; sheet.innerHTML = ""; };
+    $("#sheet-cancel").onclick = close;
+    sheet.onclick = (e) => { if (e.target === sheet) close(); };
+    $("#sheet-ok").onclick = async () => {
+      $("#sheet-ok").disabled = true;
+      try { await onConfirm(); close(); }
+      catch (e) {
+        $("#sheet-ok").disabled = false;
+        const p = sheet.querySelector(".body");
+        const err = document.createElement("div");
+        err.className = "err";
+        err.style.marginTop = "10px";
+        err.textContent = e.message || "That didn't work.";
+        p.after(err);
+      }
+    };
+  }
+
+  async function putWorkflow(branch, folder) {
+    const base = "/repos/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo) + "/contents/" + WORKFLOW_PATH;
+    const yaml = pagesWorkflowYaml(branch, folder);
+    let sha;
+    try {
+      const { data } = await gh(base + "?ref=" + encodeURIComponent(branch));
+      sha = data && data.sha;
+    } catch (e) {
+      if (e.status !== 404) throw e;
+    }
+    const body = {
+      message: sha ? "Update Lumen Deploy Pages workflow" : "Add Lumen Deploy Pages workflow",
+      content: utf8B64(yaml),
+      branch,
+    };
+    if (sha) body.sha = sha;
+    await gh(base, { method: "PUT", body });
+  }
+
+  async function enablePages(mode, branch, folder) {
+    const base = "/repos/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo) + "/pages";
+    const existing = state.pages[fullName()];
+    const has = existing && existing.enabled !== false && !existing.error && (existing.html_url || existing.build_type || existing.source);
+    if (mode === "workflow") {
+      const payload = { build_type: "workflow" };
+      if (has) await gh(base, { method: "PUT", body: payload });
+      else await gh(base, { method: "POST", body: payload });
+    } else {
+      const payload = { build_type: "legacy", source: { branch, path: folder } };
+      if (has) await gh(base, { method: "PUT", body: payload });
+      else await gh(base, { method: "POST", body: { source: { branch, path: folder } } });
+    }
+    state.pages[fullName()] = await getPages(state.owner, state.repo);
+  }
+
+  async function doPublish() {
+    const repo = repoObj(fullName());
+    const branch = state.pubBranch || (repo && repo.default_branch) || "main";
+    const folder = state.pubFolder || "/";
+    const mode = state.pubMode || "workflow";
+    const yaml = mode === "workflow" ? pagesWorkflowYaml(branch, folder) : "";
+    const already = pagesOn(state.pages[fullName()]);
+    const steps = [];
+    if (mode === "workflow") {
+      steps.push("Commit <code>" + esc(WORKFLOW_PATH) + "</code> on <code>" + esc(branch) + "</code> (folder <code>" + esc(folder) + "</code>).");
+      steps.push((already ? "Switch" : "Enable") + " GitHub Pages to <code>build_type: workflow</code>.");
+    } else {
+      steps.push((already ? "Update" : "Enable") + " GitHub Pages from <code>" + esc(branch) + "</code> and <code>" + esc(folder) + "</code> (legacy source).");
+    }
+    confirmSheet({
+      title: already ? "Update Pages publishing?" : "Enable GitHub Pages?",
+      body: `<p>This writes to <strong>${esc(fullName())}</strong>.</p><ul class="scopes">${steps.map((s) => `<li>${s}</li>`).join("")}</ul>`,
+      yaml,
+      confirmLabel: already ? "Update" : "Publish",
+      onConfirm: async () => {
+        state.busy = "publish";
+        render();
+        try {
+          if (mode === "workflow") await putWorkflow(branch, folder);
+          await enablePages(mode, branch, folder);
+          toast(already ? "Pages settings updated." : "Pages enabled.");
+        } catch (e) {
+          let msg = e.message || "Publish failed.";
+          if (e.status === 403) msg += " Your token may need Pages write, Contents write, and Workflows write. Administration is only needed if this still fails.";
+          if (e.data && e.data.message) { /* already in e.message */ }
+          throw new Error(msg);
+        } finally {
+          state.busy = "";
+          render();
+        }
+      },
+    });
+  }
+
+  async function doDeploy() {
+    const repo = repoObj(fullName());
+    const branch = state.pubBranch || (repo && repo.default_branch) || "main";
+    const pages = state.pages[fullName()];
+    const isWorkflow = pages && pages.build_type === "workflow";
+    const isLegacy = pages && pages.enabled !== false && pages.build_type !== "workflow" && (pages.html_url || pages.source);
+    if (!isWorkflow && !isLegacy) {
+      toast("Publish this repo to Pages first.");
+      return;
+    }
+    const body = isWorkflow
+      ? `<p>This will dispatch the Pages workflow on <code>${esc(branch)}</code> for <strong>${esc(fullName())}</strong>.</p>`
+      : `<p>This will request a new GitHub Pages build for <strong>${esc(fullName())}</strong> (legacy source).</p>`;
+    confirmSheet({
+      title: "Deploy now?",
+      body,
+      confirmLabel: "Deploy",
+      onConfirm: async () => {
+        state.busy = "deploy";
+        render();
+        try {
+          const base = "/repos/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo);
+          if (isWorkflow) {
+            let dispatched = false;
+            try {
+              await gh(base + "/actions/workflows/" + encodeURIComponent(WORKFLOW_PATH) + "/dispatches", {
+                method: "POST",
+                body: { ref: branch },
+              });
+              dispatched = true;
+            } catch (e) {
+              const { data } = await gh(base + "/actions/workflows");
+              const list = (data && data.workflows) || [];
+              const wf = list.find((w) => (w.path || "").endsWith("lumen-pages.yml") || /pages/i.test(w.name || "") || /pages/i.test(w.path || ""));
+              if (!wf) throw e;
+              await gh(base + "/actions/workflows/" + wf.id + "/dispatches", { method: "POST", body: { ref: branch } });
+              dispatched = true;
+            }
+            if (!dispatched) throw new Error("No Pages workflow to dispatch.");
+          } else {
+            await gh(base + "/pages/builds", { method: "POST" });
+          }
+          toast("Deploy started.");
+          setTimeout(() => loadDeployData(), 1200);
+        } finally {
+          state.busy = "";
+          render();
+        }
+      },
+    });
+  }
+
+  /* ---------- views ---------- */
+  function renderHeader() {
+    const top = $("#top");
+    const showBack = state.view === "project" || state.view === "logs" || (state.view === "deployments" && state.owner);
+    let title = "Lumen Deploy";
+    let sub = "";
+    let backTo = "#/projects";
+    if (state.view === "projects") { title = "Projects"; sub = state.user ? ("Signed in as " + state.user.login) : "Your GitHub repositories"; }
+    if (state.view === "project") { title = state.repo || "Project"; sub = fullName(); backTo = "#/projects"; }
+    if (state.view === "deployments") {
+      title = "Deployments";
+      sub = fullName() || "Pick a project first";
+      backTo = state.owner ? "#/project/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo) : "#/projects";
+    }
+    if (state.view === "logs") {
+      title = "Logs";
+      sub = fullName() + " · " + shortSha((state.currentRun && state.currentRun.head_sha) || "");
+      backTo = "#/deployments/" + encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo);
+    }
+    if (state.view === "settings") { title = "Settings"; sub = state.tokenOk && state.user ? ("Connected as " + state.user.login) : "GitHub token"; }
+    const avatar = state.user && state.user.avatar_url
+      ? `<button type="button" id="who" title="${esc(state.user.login)}" data-go="#/settings"><img alt="" src="${esc(safeHttp(state.user.avatar_url))}"></button>`
+      : "";
+    top.innerHTML = `
+      ${showBack ? `<button type="button" class="back" id="btn-back" data-go="${esc(backTo)}" aria-label="Back">${backSvg()}</button>` : `<div class="mark" style="width:32px;height:32px;border-radius:9px">${markSvg()}</div>`}
+      <div class="titles"><h1>${esc(title)}</h1><div class="sub">${esc(sub)}</div></div>
+      <div id="live"${state.polling ? ' class="on"' : ""}><i></i> Live</div>
+      ${avatar}`;
+  }
+
+  function renderTabs() {
+    const tab = state.view === "project" || state.view === "logs" ? (state.view === "logs" ? "deployments" : "projects") : state.view;
+    $$("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab || (tab === "deployments" && b.dataset.tab === "deployments") || (state.view === "project" && b.dataset.tab === "projects")));
+  }
+
+  function renderSettings() {
+    const has = !!getToken();
+    const shown = has ? "A token is saved on this phone. It is never sent to Lumen Deploy's host — only straight to api.github.com." : "Paste a fine-grained personal access token. It stays in this browser's localStorage and is sent only to GitHub.";
+    return `
+      <div class="logo-row">
+        <div class="mark">${markSvg()}</div>
+        <div>
+          <div class="kicker">Lumen Deploy</div>
+          <div style="font-size:20px;font-weight:600;letter-spacing:-.03em;margin-top:2px">Connect GitHub</div>
+        </div>
+      </div>
+      <p class="lead">A simple, mobile-first dashboard for publishing a repo to GitHub Pages — previews, deploys and logs, without a backend.</p>
+      ${state.error ? `<div class="err">${esc(state.error)}</div>` : ""}
+      ${state.tokenOk && state.user ? `<div class="banner-ok">Connected as <strong>${esc(state.user.login)}</strong>${state.user.html_url ? ` · <a href="${esc(safeHttp(state.user.html_url))}" target="_blank" rel="noopener">profile</a>` : ""}.</div>` : ""}
+      <label class="lbl" for="token">Personal access token</label>
+      <div class="field">
+        <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="${has ? "Saved on this device — paste a new one to replace" : "github_pat_…"}" value="">
+        <button type="button" class="eye" id="toggle-token" aria-label="Show token">${eyeSvg()}</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-acc" type="button" id="btn-save">${has ? "Save new token" : "Save token"}</button>
+        ${has ? `<button class="btn btn-danger" type="button" id="btn-forget">Forget token</button>` : ""}
+      </div>
+      <p class="tiny" style="margin-top:10px">${esc(shown)}</p>
+      <div class="card" style="margin-top:18px">
+        <div class="kicker" style="margin-bottom:8px">Token permissions</div>
+        <p class="note">Create a <strong>fine-grained</strong> token at
+          <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>,
+          limited to the repos you want to publish. Resource owner must be your user (or an org that allows it). Suggested expiry: 90 days.</p>
+        <ul class="scopes">
+          <li><strong>Contents</strong> (read and write) — commit the Pages workflow file.</li>
+          <li><strong>Workflows</strong> (read and write) — required by GitHub to add or change files under <code>.github/workflows</code>.</li>
+          <li><strong>Pages</strong> (read and write) — enable Pages and read site status / URLs.</li>
+          <li><strong>Actions</strong> (read and write) — list runs, dispatch a redeploy, read jobs.</li>
+          <li><strong>Deployments</strong> (read) — list deployment status and environment URLs.</li>
+          <li><strong>Administration</strong> (write) — only if enabling Pages still returns 403 after the above.</li>
+          <li><strong>Metadata</strong> (read) — always included on fine-grained tokens.</li>
+        </ul>
+        <p class="tiny" style="margin-top:10px">A classic token needs <code>repo</code> and <code>workflow</code> instead. Don't paste a token into chat, a ticket, or another app's settings.</p>
+      </div>
+    `;
+  }
+
+  function eyeSvg() {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  }
+
+  function filteredRepos() {
+    const q = (state.filter || "").trim().toLowerCase();
+    return state.repos.filter((r) => {
+      if (state.vis === "public" && r.private) return false;
+      if (state.vis === "private" && !r.private) return false;
+      if (!q) return true;
+      const blob = ((r.full_name || "") + " " + (r.name || "") + " " + (r.description || "")).toLowerCase();
+      return blob.includes(q);
+    });
+  }
+
+  function renderProjects() {
+    if (!state.tokenOk) {
+      return `<div class="empty">
+        <div class="mark" style="margin:0 auto">${markSvg()}</div>
+        <h3>Connect GitHub first</h3>
+        <p>Save a personal access token in Settings to list your repositories.</p>
+        <div style="margin-top:16px"><button class="btn btn-acc" type="button" data-go="#/settings">Open Settings</button></div>
+      </div>`;
+    }
+    if (state.loading.repos && !state.repos.length) {
+      return `<div class="skel"></div><div class="skel"></div><div class="skel"></div>`;
+    }
+    const list = filteredRepos();
+    return `
+      ${state.error ? `<div class="err">${esc(state.error)}</div>` : ""}
+      <div class="search">
+        <div class="field">
+          ${searchSvg()}
+          <input id="q" type="search" placeholder="Search repositories" value="${esc(state.filter)}" enterkeyhint="search">
+        </div>
+        <div class="filters">
+          ${["all","public","private"].map((v) => `<button type="button" class="chip${state.vis===v?" on":""}" data-vis="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join("")}
+        </div>
+      </div>
+      <div class="section"><h2>Repositories</h2><span class="count">${list.length}</span></div>
+      ${list.length ? list.map(repoRow).join("") : `<div class="empty"><h3>No matching repos</h3><p>Try another search or visibility filter.</p></div>`}
+    `;
+  }
+
+  function repoRow(r) {
+    return `<button type="button" class="repo" data-repo="${esc(r.full_name)}">
+      <div class="name">${esc(r.name)}</div>
+      <div class="meta">
+        <span class="pill ${r.private ? "pill-priv" : "pill-pub"}">${r.private ? "Private" : "Public"}</span>
+        <span>${esc(r.default_branch || "main")}</span>
+        ${pagesPill(r.full_name)}
+        <span>${esc(timeAgo(r.updated_at))}</span>
+      </div>
+    </button>`;
+  }
+
+  function renderProject() {
+    const name = fullName();
+    const repo = repoObj(name);
+    if (!state.tokenOk) return renderProjects();
+    if (!repo && !state.loading.repos) {
+      return `<div class="err">I couldn't find ${esc(name)} in your repo list. It may be under another account, or the token can't see it.</div>`;
+    }
+    const info = state.pages[name];
+    const on = pagesOn(info);
+    const branch = state.pubBranch || (repo && repo.default_branch) || "main";
+    const folder = state.pubFolder || "/";
+    const mode = state.pubMode || "workflow";
+    const live = info && safeHttp(info.html_url);
+    const recent = state.runs.slice(0, 4);
+    const branches = Array.from(new Set([repo && repo.default_branch, "main", "master", "gh-pages"].filter(Boolean)));
+    return `
+      ${state.error ? `<div class="err">${esc(state.error)}</div>` : ""}
+      <div class="meta" style="margin:0 0 14px">
+        <span class="pill ${repo && repo.private ? "pill-priv" : "pill-pub"}">${repo && repo.private ? "Private" : "Public"}</span>
+        ${pagesPill(name)}
+        <span>${esc((repo && repo.default_branch) || "main")}</span>
+      </div>
+      <div class="live-box">
+        <div class="k">Live URL</div>
+        <div class="v">${live ? `<a href="${esc(live)}" target="_blank" rel="noopener">${esc(live)}</a>` : (info && info.error ? esc(info.error) : (info === undefined ? "Checking Pages…" : "Not published yet"))}</div>
+        ${info && info.build_type ? `<div class="tiny" style="margin-top:6px">Build: ${esc(info.build_type)}${info.source && info.source.branch ? " · " + esc(info.source.branch) + " " + esc(info.source.path || "/") : ""} · ${esc(info.status || "")}</div>` : ""}
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-acc" type="button" id="btn-deploy" ${on ? "" : "disabled"}>${state.busy === "deploy" ? "Starting…" : "Deploy now"}</button>
+      </div>
+      <div class="section"><h2>Publish to Pages</h2></div>
+      <div class="row-2">
+        <div>
+          <label class="lbl" for="pub-branch">Branch</label>
+          <select id="pub-branch">${branches.map((b) => `<option value="${esc(b)}" ${b===branch?"selected":""}>${esc(b)}</option>`).join("")}</select>
+        </div>
+        <div>
+          <label class="lbl" for="pub-folder">Folder</label>
+          <select id="pub-folder">
+            <option value="/" ${folder==="/"?"selected":""}>/ (root)</option>
+            <option value="/docs" ${folder==="/docs"?"selected":""}>/docs</option>
+          </select>
+        </div>
+      </div>
+      <div class="radio" style="margin-top:10px">
+        <label class="${mode==="workflow"?"on":""}">
+          <input type="radio" name="pub-mode" value="workflow" ${mode==="workflow"?"checked":""}>
+          <span><span class="t">Actions workflow</span><span class="d">Preferred. Commits <code>lumen-pages.yml</code> and sets Pages to <code>build_type: workflow</code>.</span></span>
+        </label>
+        <label class="${mode==="legacy"?"on":""}">
+          <input type="radio" name="pub-mode" value="legacy" ${mode==="legacy"?"checked":""}>
+          <span><span class="t">Legacy branch / folder</span><span class="d">Uses GitHub's older source. Handy if the default branch is protected and can't receive a workflow file.</span></span>
+        </label>
+      </div>
+      <div class="warn">
+        GitHub Pages has <strong>one live URL per repo</strong> — not a Vercel-style preview subdomain. Other branches still show commit, status and logs; an <code>environment_url</code> is linked when GitHub returns one.
+      </div>
+      <button class="btn btn-ghost" type="button" id="btn-publish">${state.busy === "publish" ? "Working…" : (on ? "Update publishing" : "Enable Pages")}</button>
+      <div class="section"><h2>Latest deploys</h2><button type="button" class="link" data-go="#/deployments/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}">View all</button></div>
+      ${state.loading.deploys && !recent.length ? `<div class="skel"></div>` : (recent.length ? recent.map(runRow).join("") : `<p class="tiny">No Actions runs yet. Publish, then Deploy now.</p>`)}
+    `;
+  }
+
+  function runRow(r) {
+    const live = safeHttp(r.live);
+    return `<button type="button" class="run" data-run="${esc(r.id)}">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="pill pill-${esc(r.kind)}">${r.kind === "building" || r.kind === "queued" ? '<i class="dot"></i> ' : ""}${esc(statusLabel(r.kind))}</span>
+        <span class="msg" style="flex:1">${esc(r.message)}</span>
+      </div>
+      <div class="meta">
+        <span class="sha">${esc(shortSha(r.sha))}</span>
+        <span>${esc(r.branch || "—")}</span>
+        <span>${esc(timeAgo(r.time))}</span>
+        ${r.event ? `<span>${esc(r.event)}</span>` : ""}
+      </div>
+      ${live ? `<div class="url-line">${esc(live)}</div>` : (r.branch && repoObj(fullName()) && r.branch !== repoObj(fullName()).default_branch ? `<div class="url-line" style="color:var(--mute)">No isolated preview URL</div>` : "")}
+    </button>`;
+  }
+
+  function renderDeployments() {
+    if (!state.tokenOk) return renderProjects();
+    if (!state.owner || !state.repo) {
+      const last = lastRepo();
+      return `<div class="empty">
+        <h3>Pick a project</h3>
+        <p>Open a repository first, then this tab will list its deploys.</p>
+        <div style="margin-top:16px"><button class="btn btn-acc" type="button" data-go="${last ? "#/project/" + last : "#/projects"}">${last ? "Open last project" : "Browse projects"}</button></div>
+      </div>`;
+    }
+    const runs = state.runs;
+    return `
+      ${state.error ? `<div class="err">${esc(state.error)}</div>` : ""}
+      <div class="warn" style="margin-top:0">
+        Branch previews aren't isolated on GitHub Pages (one site per repo). Ready deploys link the live URL or a GitHub <code>environment_url</code> when one exists.
+      </div>
+      <div class="section"><h2>All runs</h2><span class="count">${runs.length}</span></div>
+      ${state.loading.deploys && !runs.length ? `<div class="skel"></div><div class="skel"></div>` : ""}
+      ${runs.length ? runs.map(runRow).join("") : (!state.loading.deploys ? `<div class="empty"><h3>No deployments yet</h3><p>Publish the project, then tap Deploy now.</p></div>` : "")}
+    `;
+  }
+
+  function stepIcon(step) {
+    const kind = statusKind(step.status, step.conclusion);
+    if (kind === "ready") return `<span class="st ok">✓</span>`;
+    if (kind === "failed") return `<span class="st fail">✕</span>`;
+    if (kind === "building") return `<span class="st run">●</span>`;
+    return `<span class="st">○</span>`;
+  }
+
+  function logBlock(jobId) {
+    const text = state.logs[jobId];
+    const err = state.logError[jobId];
+    const githubUrl = (err && err.githubUrl) || ("https://github.com/" + state.owner + "/" + state.repo + "/actions/runs/" + state.runId);
+    if (text) {
+      return `<pre class="logs">${esc(text)}</pre>
+        <a class="btn btn-ghost" style="margin-top:10px" href="${esc(githubUrl)}" target="_blank" rel="noopener">Open on GitHub</a>`;
+    }
+    if (err) {
+      const why = err.cors
+        ? "GitHub's job-log endpoint redirects to a signed URL that doesn't allow this site to read it (CORS). That's a GitHub limitation, not a missing token."
+        : ("Couldn't load logs" + (err.status ? " (" + err.status + ")" : "") + ".");
+      return `<div class="warn">${esc(why)}</div>
+        <a class="btn btn-ghost" href="${esc(githubUrl)}" target="_blank" rel="noopener">Open on GitHub</a>`;
+    }
+    return `<p class="tiny">Loading logs…</p>`;
+  }
+
+  function renderLogs() {
+    const run = state.currentRun;
+    const kind = run ? statusKind(run.status, run.conclusion) : "";
+    const msg = run ? firstLine(run.display_title || (run.head_commit && run.head_commit.message) || run.name) : "Deploy logs";
+    const openRun = run && safeHttp(run.html_url);
+    return `
+      ${state.error ? `<div class="err">${esc(state.error)}</div>` : ""}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        ${kind ? `<span class="pill pill-${esc(kind)}">${kind === "building" || kind === "queued" ? '<i class="dot"></i> ' : ""}${esc(statusLabel(kind))}</span>` : ""}
+        <strong style="font-size:15px">${esc(msg)}</strong>
+      </div>
+      <div class="meta" style="margin-top:0 0 14px">
+        <span class="sha">${esc(shortSha(run && run.head_sha))}</span>
+        <span>${esc((run && run.head_branch) || "")}</span>
+        <span>${esc(timeAgo(run && (run.updated_at || run.created_at)))}</span>
+      </div>
+      ${state.loading.logs && !state.jobs.length ? `<div class="skel"></div>` : ""}
+      ${state.jobs.map((job) => {
+        const jk = statusKind(job.status, job.conclusion);
+        const steps = job.steps || [];
+        return `<div class="job">
+          <div class="head">
+            <span class="pill pill-${esc(jk)}">${esc(statusLabel(jk))}</span>
+            <div class="name">${esc(job.name || "Job")}</div>
+          </div>
+          ${steps.length ? `<ul class="steps">${steps.map((s) => `<li>${stepIcon(s)}<span>${esc(s.name || "Step")}</span></li>`).join("")}</ul>` : ""}
+          <div data-log="${job.id}">${logBlock(job.id)}</div>
+        </div>`;
+      }).join("")}
+      ${openRun ? `<a class="btn btn-ghost" href="${esc(openRun)}" target="_blank" rel="noopener" style="margin-top:8px">Open run on GitHub</a>` : ""}
+    `;
+  }
+
+  function render() {
+    renderHeader();
+    renderTabs();
+    const main = $("#main");
+    const y = main.scrollTop;
+    const keepScroll = main.dataset.view === state.view && main.dataset.key === (fullName() + ":" + state.runId);
+    let html = "";
+    if (state.view === "settings") html = renderSettings();
+    else if (state.view === "projects") html = renderProjects();
+    else if (state.view === "project") html = renderProject();
+    else if (state.view === "deployments") html = renderDeployments();
+    else if (state.view === "logs") html = renderLogs();
+    main.innerHTML = html;
+    main.dataset.view = state.view;
+    main.dataset.key = fullName() + ":" + state.runId;
+    if (keepScroll) main.scrollTop = y;
+    bindView();
+  }
+
+  function bindView() {
+    if (state.view === "settings") {
+      const save = $("#btn-save");
+      if (save) save.onclick = async () => {
+        const v = ($("#token") && $("#token").value || "").trim();
+        if (!v) { toast("Paste a token first."); return; }
+        setToken(v);
+        save.disabled = true;
+        const ok = await verifyToken();
+        save.disabled = false;
+        if (ok) {
+          state.repos = [];
+          state.pages = {};
+          toast("Token saved on this device.");
+          go("projects", "", "", "", true);
+          loadRepos(true);
+        } else render();
+      };
+      const forget = $("#btn-forget");
+      if (forget) forget.onclick = () => {
+        confirmSheet({
+          title: "Forget this token?",
+          body: "<p>It will be removed from this browser's localStorage. GitHub is unchanged.</p>",
+          confirmLabel: "Forget token",
+          onConfirm: async () => {
+            setToken("");
+            lastRepo("");
+            state.user = null;
+            state.tokenOk = false;
+            state.repos = [];
+            state.pages = {};
+            state.runs = [];
+            toast("Token forgotten.");
+            go("settings", "", "", "", true);
+            render();
+          },
+        });
+      };
+      const tog = $("#toggle-token");
+      if (tog) tog.onclick = () => {
+        const i = $("#token");
+        i.type = i.type === "password" ? "text" : "password";
+      };
+    }
+    if (state.view === "projects") {
+      const q = $("#q");
+      if (q) {
+        q.addEventListener("input", () => {
+          state.filter = q.value;
+          const list = filteredRepos();
+          const section = q.closest(".search").nextElementSibling;
+          const hold = q.selectionStart;
+          // rerender list only
+          const count = section && section.querySelector(".count");
+          if (count) count.textContent = list.length;
+          let next = section.nextElementSibling;
+          const frag = document.createDocumentFragment();
+          const wrap = document.createElement("div");
+          wrap.innerHTML = list.length ? list.map(repoRow).join("") : `<div class="empty"><h3>No matching repos</h3><p>Try another search or visibility filter.</p></div>`;
+          const parent = section.parentNode;
+          while (next) { const n = next.nextSibling; next.remove(); next = n; }
+          while (wrap.firstChild) parent.appendChild(wrap.firstChild);
+          q.focus();
+          try { q.setSelectionRange(hold, hold); } catch (_) {}
+          bindRepoClicks();
+        });
+      }
+      $$("[data-vis]").forEach((c) => c.onclick = () => { state.vis = c.dataset.vis; render(); });
+      bindRepoClicks();
+    }
+    if (state.view === "project") {
+      const br = $("#pub-branch");
+      const fo = $("#pub-folder");
+      if (br) br.onchange = () => { state.pubBranch = br.value; };
+      if (fo) fo.onchange = () => { state.pubFolder = fo.value; };
+      $$('input[name="pub-mode"]').forEach((r) => {
+        r.onchange = () => { state.pubMode = r.value; render(); };
+      });
+      const pub = $("#btn-publish");
+      if (pub) pub.onclick = doPublish;
+      const dep = $("#btn-deploy");
+      if (dep) dep.onclick = doDeploy;
+      bindRunClicks();
+    }
+    if (state.view === "deployments") bindRunClicks();
+    $$("[data-go]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        const to = el.getAttribute("data-go");
+        if (!to) return;
+        if (el.tagName === "BUTTON" || el.tagName === "DIV") {
+          e.preventDefault();
+          location.hash = to.replace(/^#/, "#");
+          if (!to.startsWith("#")) location.hash = "#" + to;
+          else location.hash = to;
+        }
+      });
+    });
+  }
+
+  function bindRepoClicks() {
+    $$(".repo[data-repo]").forEach((el) => {
+      el.onclick = () => {
+        const [owner, repo] = el.dataset.repo.split("/");
+        lastRepo(encodeURIComponent(owner) + "/" + encodeURIComponent(repo));
+        go("project", owner, repo);
+      };
+    });
+  }
+  function bindRunClicks() {
+    $$(".run[data-run]").forEach((el) => {
+      el.onclick = () => go("logs", state.owner, state.repo, el.dataset.run);
+    });
+  }
+
+  $$("#tabs button").forEach((b) => {
+    b.onclick = () => {
+      const tab = b.dataset.tab;
+      if (tab === "projects") go("projects");
+      else if (tab === "settings") go("settings");
+      else if (tab === "deployments") {
+        if (state.owner && state.repo) go("deployments", state.owner, state.repo);
+        else {
+          const last = lastRepo();
+          if (last) {
+            const [o, r] = last.split("/").map(decodeURIComponent);
+            go("deployments", o, r);
+          } else go("deployments");
+        }
+      }
+    };
+  });
+
+  async function onRoute() {
+    const r = parseHash();
+    const changed = r.view !== state.view || r.owner !== state.owner || r.repo !== state.repo || String(r.runId || "") !== String(state.runId || "");
+    state.view = r.view;
+    state.owner = r.owner || ((r.view === "deployments" || r.view === "project" || r.view === "logs") ? (r.owner || "") : (r.owner || state.owner || ""));
+    if (r.view === "projects" || r.view === "settings") {
+      /* keep last owner for tab jumps unless hash specifies none and we're on projects */
+    }
+    if (r.owner) state.owner = r.owner;
+    if (r.repo) state.repo = r.repo;
+    if (r.view === "projects" || r.view === "settings") {
+      if (r.view === "projects") { /* leave last selected */ }
+    }
+    if ((r.view === "deployments" && !r.owner) || (r.view === "projects") || (r.view === "settings")) {
+      if (r.view !== "deployments" || !r.owner) {
+        if (r.view === "deployments" && !r.owner) { state.owner = ""; state.repo = ""; }
+      }
+    }
+    state.runId = r.runId || "";
+    if (r.view === "project" || (r.view === "deployments" && r.owner) || r.view === "logs") {
+      state.owner = r.owner;
+      state.repo = r.repo;
+      if (state.owner && state.repo) lastRepo(encodeURIComponent(state.owner) + "/" + encodeURIComponent(state.repo));
+    }
+    state.error = state.view === "settings" ? state.error : "";
+    if (state.view !== "logs") { state.jobs = []; state.logs = {}; state.logError = {}; state.currentRun = null; }
+    const repo = repoObj(fullName());
+    if (repo) {
+      if (!state.pubBranch) state.pubBranch = repo.default_branch || "main";
+    }
+    render();
+    if (!getToken() && state.view !== "settings") return;
+    if (getToken() && !state.tokenOk) {
+      const ok = await verifyToken();
+      if (!ok) { render(); return; }
+      render();
+    }
+    if (state.view === "projects") await loadRepos();
+    if (state.view === "project") {
+      await loadRepos();
+      if (state.pages[fullName()] === undefined && state.owner) {
+        state.pages[fullName()] = await getPages(state.owner, state.repo);
+        render();
+      }
+      const info = state.pages[fullName()];
+      if (info && info.source && info.source.path) state.pubFolder = info.source.path || "/";
+      if (info && info.build_type) state.pubMode = info.build_type === "legacy" ? "legacy" : "workflow";
+      if (info && info.source && info.source.branch) state.pubBranch = info.source.branch;
+      await loadDeployData();
+    }
+    if (state.view === "deployments" && state.owner && state.repo) {
+      await loadRepos();
+      if (state.pages[fullName()] === undefined) state.pages[fullName()] = await getPages(state.owner, state.repo);
+      await loadDeployData();
+    }
+    if (state.view === "logs") {
+      await loadLogs();
+    }
+    if (!changed) { /* already rendered */ }
+  }
+
+  window.addEventListener("hashchange", onRoute);
+
+  if ("serviceWorker" in navigator && !navigator.webdriver) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+
+  (async function init() {
+    if (!location.hash) {
+      history.replaceState(null, "", getToken() ? "#/projects" : "#/settings");
+    }
+    await onRoute();
+    window.__ready = true;
+  })();
+})();
+</script>
+</body>
+</html>
